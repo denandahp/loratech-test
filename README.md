@@ -13,23 +13,15 @@ A simple rest api used to CRUD Transactions and User.
 version: '3.8'
 
 services:
-
     loratech-test:
-
     image: denandahp/loratech-test:latest
-
     container_name: loratech-test
-
     networks:
-
     - loratech-networks
-
     ports:
-
     - 8000:8000
 
 networks:
-
    loratech-networks:
 ```
 
