@@ -4,6 +4,7 @@ from django.db import transaction
 
 from loratech_test.apps.transactions.model import Balance, TransactionLog
 from loratech_test.apps.users.model import User
+from loratech_test.core.utils import generate_code
 
 
 class DepositForm(forms.Form):
@@ -48,7 +49,8 @@ class DepositForm(forms.Form):
                 previous_balance=previous_balance,
                 after_balance=after_balance,
                 amount=amount,
-                status=TransactionLog.STATUS.DEPOSIT
+                status=TransactionLog.STATUS.DEPOSIT,
+                transaction_number=generate_code(settings.ACCOUNT_NUMBER_LENGTH)
             )
             transaction_log.save()
 
@@ -111,7 +113,8 @@ class WithdrawForm(forms.Form):
                 after_balance=after_balance,
                 amount=amount,
                 charge=self.charger,
-                status=TransactionLog.STATUS.WITHDRAW
+                status=TransactionLog.STATUS.WITHDRAW,
+                transaction_number=generate_code(settings.ACCOUNT_NUMBER_LENGTH)
             )
             transaction_log.save()
 

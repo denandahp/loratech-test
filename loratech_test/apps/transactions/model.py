@@ -28,7 +28,7 @@ class TransactionLog(models.Model):
     previous_balance = models.IntegerField(default=0, blank=True, null=True)
     amount = models.IntegerField(default=0, blank=True, null=True)
     charge = models.IntegerField(default=0, blank=True, null=True)
-    transaction_number = models.CharField(max_length=10, db_index=True, default=generate_code(settings.ACCOUNT_NUMBER_LENGTH))
+    transaction_number = models.CharField(max_length=10, db_index=True)
 
     STATUS = Choices(
         (1, "WITHDRAW", "Withdraw"),
