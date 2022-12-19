@@ -81,13 +81,14 @@ class IndexTransaction(APIView):
         end = f'{end} 23:59:59'
         start = datetime.strptime(start, date_format)
         end = datetime.strptime(end, date_format)
-        delta = start - end
+        delta = end - start
         day_count = delta.days
         dates = {
             'start': start,
             'end': end,
         }
         message = None
+        print(day_count)
         if day_count > settings.MAXIMAL_DAYS_FILTER_TRANSACTION:
             message = 'Tidak bisa filter lebih dari 3 bulan'
             return False, message, dates
