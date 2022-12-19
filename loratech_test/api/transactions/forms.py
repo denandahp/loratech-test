@@ -30,7 +30,9 @@ class DepositForm(forms.Form):
     
     def clean(self):
         data = super().clean()
-        self.user = self.cleaned_data['user_id']
+        if self.errors:
+            return data
+        self.user = self.cleaned_data.get('user_id')
         self.balance = Balance.objects.get(user=self.user)
         return data
     
@@ -67,7 +69,7 @@ class WithdrawForm(forms.Form):
         user = User.objects.filter(id=user_id).first()
         if not user:
             raise forms.ValidationError("User tidak ditemukan",
-                                        code="user_not_exist")
+                                        code="users_not_exist")
         return user
     
     def clean_amount(self):
@@ -88,10 +90,17 @@ class WithdrawForm(forms.Form):
     
     def clean(self):
         data = super().clean()
-        self.user = self.cleaned_data['user_id']
+        if self.errors:
+            return data
+        self.user = self.cleaned_data.get('user_id')
         self.balance = Balance.objects.get(user=self.user)
         if self.balance.balance <= settings.MINIMAL_WITHDRAW:
             error = forms.ValidationError(f'Saldo anda saat ini kurang dari {settings.MINIMAL_WITHDRAW}',
+                                          code="less_balance")
+            self.add_error('amount', error)
+        amount = data['amount']
+        if (self.balance.balance - amount) < settings.MINIMAL_WITHDRAW:
+            error = forms.ValidationError(f'Saldo anda saat ini kurang dari {amount}',
                                           code="less_balance")
             self.add_error('amount', error)
 
