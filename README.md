@@ -36,7 +36,7 @@ $ docker-compose up
 After the apps running is succesfully, we can start by calling routes. For example :
 
 ```
-127.0.0.1:8000/
+127.0.0.1:8000/admin
 ```
 
 ### API Guide And Documentation :
