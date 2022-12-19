@@ -1,6 +1,10 @@
-from django.forms.models import model_to_dict
+from datetime import datetime, timedelta
 
-from loratech_test.api.response import ErrorResponse
+from django.conf import settings
+from django.db.models import Q
+from django.utils import timezone
+
+from loratech_test.api.response import ErrorResponse, error_response
 
 from rest_framework import request, status
 from rest_framework.response import Response
@@ -9,6 +13,100 @@ from rest_framework.views import APIView
 from loratech_test.api.transactions.forms import DepositForm, WithdrawForm
 from loratech_test.apps.transactions.model import TransactionLog
 from loratech_test.apps.users.model import User
+from loratech_test.core.utils import PaginatorPage
+
+
+class IndexTransaction(APIView):
+
+    def get(self, request: request) -> Response:
+        transaction_list = []
+        transactions = None
+        acc_number = request.GET.get('acc_number')
+        limit = int(request.GET.get('limit', 1))
+        page = request.GET.get('page', 1)
+        types = request.GET.get('type')
+        if types:
+            types = [value for value, name in TransactionLog.STATUS if name == types][0]
+        start = request.GET.get('start')
+        end = request.GET.get('end')
+
+        if start and end:
+            is_date_valid, message, dates = self.check_date_filter(start, end)
+            if not is_date_valid:
+                return error_response(message)
+            start = dates['start']
+            end = dates['end']
+        else:
+            start = datetime.now() - timedelta(days=30)
+            end = datetime.now()
+        
+        print(start, end)
+
+        if acc_number:
+            filters = Q(from_user__account_number=acc_number) | Q(status=types) | Q(created__range=[start, end])
+        elif types:
+            filters = Q(status=types) | Q(created__range=[start, end])
+        elif start and end:
+            filters = Q(created__range=[start, end])
+        else:
+            filters = Q(created__range=[start, end])
+        
+        # default value is 1 month back
+        transactions = TransactionLog.objects.select_related('from_user').filter(filters)
+        paginator = PaginatorPage(transactions, page, step=limit)
+        for transaction in paginator.objects:
+            transaction_list.append(self.serialize_data(transaction))
+        
+        data = {
+            'limit': limit,
+            'paginator': {
+                'next': paginator.next,
+                'previous': paginator.previous
+            },
+            'data': transaction_list
+        }
+
+        return Response(data=data, status=status.HTTP_200_OK)
+    
+    def check_date_filter(self, start: str, end: str):
+        date_format = "%Y-%m-%d %H:%M:%S"
+        start = f'{start} 00:00:00'
+        end = f'{end} 23:59:59'
+        start = datetime.strptime(start, date_format)
+        end = datetime.strptime(end, date_format)
+        delta = start - end
+        day_count = delta.days
+        dates = {
+            'start': start,
+            'end': end,
+        }
+        message = None
+        if day_count > settings.MAXIMAL_DAYS_FILTER_TRANSACTION:
+            message = 'Tidak bisa filter lebih dari 3 bulan'
+            return False, message, dates
+        
+        if end > (datetime.now() + timedelta(days=1)):
+            message = f'Tidak bisa filter lebih dari {datetime.now()}'
+            return False, message, dates
+
+        return True, message, dates
+    
+    def serialize_data(self, transaction: TransactionLog) -> dict:
+        user = transaction.from_user
+        data = {
+            "name": user.name,
+            "account_number": user.account_number,
+            "transaction_number": transaction.transaction_number,
+            "charge": transaction.charge,
+            "previous_balance": transaction.previous_balance,
+            "amount": transaction.amount,
+            "after_balance": transaction.after_balance,
+            "created": transaction.created,
+            "type": transaction.get_status_display(),
+
+        }
+        return data
+
 
 class Deposit(APIView):
     '''

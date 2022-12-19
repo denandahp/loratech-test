@@ -38,3 +38,10 @@ class ErrorResponse(Response):
 
                 break
         self.data = data
+
+def error_response(message: str) -> Response:
+    data ={
+        'messages': message,
+        'is_success': False
+    }
+    return Response(data=data, status=status.HTTP_400_BAD_REQUEST)

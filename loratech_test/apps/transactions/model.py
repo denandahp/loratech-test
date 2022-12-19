@@ -14,7 +14,7 @@ class Balance(models.Model):
     updated = models.DateTimeField(auto_now=True)
 
     def __str__(self) -> str:
-        return f"{self.user} - {self}"
+        return f"{self.user} - {self.balance}"
 
 
 class TransactionLog(models.Model):

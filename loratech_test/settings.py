@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_extensions',
 
     'loratech_test.apps.users',
     'loratech_test.apps.transactions'
@@ -141,4 +142,6 @@ TRANSACTION_NUMBER_LENGTH = 14
 INITIAL_DEPOSIT = 5000
 MINIMAL_DEPOSIT = 500
 MINIMAL_WITHDRAW = 10
+
+MAXIMAL_DAYS_FILTER_TRANSACTION = 90
 

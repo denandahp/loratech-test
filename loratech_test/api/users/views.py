@@ -7,22 +7,70 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from loratech_test.api.users.forms import UserForm
+from loratech_test.apps.users.model import User
+from loratech_test.core.utils import PaginatorPage
 
-class IndexUsers(APIView):
+class DetailUsers(APIView):
+    '''
+    url= http://127.0.0.1:8000/api/users/detail?id=1
+    '''
 
     def get(self, request: request) -> Response:
-        form = GetShipmentOrderForm(data=request.data or None)
-        if form.is_valid():
-            order_dict = []
-            orders, shipment_dict = form.save()
-            for order in orders:
-                order_dict.append({
-                    'order_number': order.order_number,
-                    'shipments': shipment_dict.get(order.order_number, '')
-                })
+        user_id = request.GET.get('id')
+        if user_id:
+            user = User.objects.prefetch_related('balance_users').filter(id=user_id).first()
+            if not user:
+                data ={
+                    'messages': f'User id {user_id} tidak ditemukan',
+                    'is_success': False
+                }
+                return Response(data=data, status=status.HTTP_400_BAD_REQUEST)
 
-            return Response(data={'orders': order_dict}, status=status.HTTP_200_OK)
-        return ErrorResponse(form=form)
+            data ={
+                'messages': f'Detail user {user}',
+                'is_success': True,
+                'data': self.serialize_data(user)
+            }
+            return Response(data=data, status=status.HTTP_200_OK)
+    
+    def serialize_data(self, user: User):
+        balance = user.balance_users.first()
+        data = {
+            "id": user.id,
+            "name": user.name,
+            "email": user.email,
+            "mobile_number": user.mobile_number,
+            "is_active": user.is_active,
+            "address": user.address,
+            "account_number": user.account_number,
+            "balance": balance.balance
+        }
+
+        return data
+
+
+class IndexUsers(APIView):
+    '''
+    url= http://127.0.0.1:8000/api/users?page=1&limit=10
+    '''
+
+    def get(self, request: request) -> Response:
+        user_list = []
+        limit = int(request.GET.get('limit', 1))
+        users = User.objects.prefetch_related('balance_users')
+        paginator = PaginatorPage(users, request.GET.get('page', 1), step=limit)
+        for user in paginator.objects:
+            user_list.append(DetailUsers.serialize_data(self, user))
+        data = {
+            'limit': limit,
+            'paginator': {
+                'next': paginator.next,
+                'previous': paginator.previous
+            },
+            'data': user_list
+        }
+        return Response(data=data, status=status.HTTP_200_OK)
+
 
 class CreateUsers(APIView):
 
