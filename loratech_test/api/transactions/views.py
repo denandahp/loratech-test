@@ -2,7 +2,6 @@ from datetime import datetime, timedelta
 
 from django.conf import settings
 from django.db.models import Q
-from django.utils import timezone
 
 from loratech_test.api.response import ErrorResponse, error_response
 
@@ -49,8 +48,6 @@ class IndexTransaction(APIView):
         else:
             start = datetime.now() - timedelta(days=30)
             end = datetime.now()
-        
-        print(start, end)
 
         if acc_number:
             filters = Q(from_user__account_number=acc_number) | Q(status=types) | Q(created__range=[start, end])
@@ -60,13 +57,13 @@ class IndexTransaction(APIView):
             filters = Q(created__range=[start, end])
         else:
             filters = Q(created__range=[start, end])
-        
+
         # default value is 1 month back
         transactions = TransactionLog.objects.select_related('from_user').filter(filters)
         paginator = PaginatorPage(transactions, page, step=limit)
         for transaction in paginator.objects:
             transaction_list.append(self.serialize_data(transaction))
-        
+
         data = {
             'limit': limit,
             'paginator': {
@@ -77,7 +74,7 @@ class IndexTransaction(APIView):
         }
 
         return Response(data=data, status=status.HTTP_200_OK)
-    
+
     def check_date_filter(self, start: str, end: str):
         date_format = "%Y-%m-%d %H:%M:%S"
         start = f'{start} 00:00:00'
@@ -100,7 +97,7 @@ class IndexTransaction(APIView):
             return False, message, dates
 
         return True, message, dates
-    
+
     def serialize_data(self, transaction: TransactionLog) -> dict:
         user = transaction.from_user
         data = {

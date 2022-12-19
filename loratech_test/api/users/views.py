@@ -12,16 +12,17 @@ from loratech_test.core.utils import PaginatorPage
 
 class DetailUsers(APIView):
     '''
-    url= http://127.0.0.1:8000/api/users/detail?id=1
+    url= http://127.0.0.1:8000/api/users/detail?acc_number=1
+    :param acc_number: account number user, delete param is true
     '''
 
     def get(self, request: request) -> Response:
-        user_id = request.GET.get('id')
-        if user_id:
-            user = User.objects.prefetch_related('balance_users').filter(id=user_id).first()
+        acc_number = request.GET.get('acc_number')
+        if acc_number:
+            user = User.objects.prefetch_related('balance_users').filter(account_number=acc_number).first()
             if not user:
                 data ={
-                    'messages': f'User id {user_id} tidak ditemukan',
+                    'messages': f'Nomor akun {acc_number} tidak ditemukan',
                     'is_success': False
                 }
                 return Response(data=data, status=status.HTTP_400_BAD_REQUEST)
