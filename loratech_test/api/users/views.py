@@ -52,6 +52,8 @@ class DetailUsers(APIView):
 class IndexUsers(APIView):
     '''
     url= http://127.0.0.1:8000/api/users?page=1&limit=10
+    :param page: Number of page
+    :param limit: Number of page
     '''
 
     def get(self, request: request) -> Response:

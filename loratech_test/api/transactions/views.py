@@ -17,6 +17,16 @@ from loratech_test.core.utils import PaginatorPage
 
 
 class IndexTransaction(APIView):
+    '''
+    url: /api/transactions?page=1&limit=5&acc_number=405811371&type=Deposit&start=2022-12-15&end=2022-12-19\
+    :param page: Number of page
+    :param limit: Limit data per page
+    :param acc_number: account number user, delete param is true
+    :param type: type of transaction (Deposit/Withdraw), delete param is true
+    :param start: Start date (Format YYYY-MM-DD), delete param is true
+    :param end: End date (Format YYYY-MM-DD), delete param is true
+    default param if just page and limit is 1 month back
+    '''
 
     def get(self, request: request) -> Response:
         transaction_list = []
@@ -157,7 +167,6 @@ class Deposit(APIView):
         }
 
         return data
-
 
 
 class Withdraw(APIView):
